@@ -12,6 +12,7 @@ import { AdminSidebar } from '@/components/admin/navigation/AdminSidebar';
 import { DashboardOverview } from '@/components/admin/dashboard/DashboardOverview';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import MediaManager from '@/components/admin/MediaManager';
 
 const AdminDashboard = () => {
   const { isAdmin, isLoading } = useAdminAuth();
@@ -44,6 +45,8 @@ const AdminDashboard = () => {
         return <AdminPricing />;
       case 'settings':
         return <AdminSettings />;
+      case 'media':
+        return <MediaManager />;
       default:
         return <DashboardOverview />;
     }
