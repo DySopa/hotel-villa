@@ -304,12 +304,16 @@ const MediaManager = () => {
     }
   };
 
-  const handleUpdate = async (id: string, newName: string, bucket: string) => {
+  const handleUpdate = async (oldName: string, newName: string, bucket: string) => {
+    // Prevent unnecessary updates if the name hasn't changed
+    if (oldName === newName) return;
+
     try {
+      console.log(`Tentando renomear '${oldName}' para '${newName}' no bucket '${bucket}'`);
       const { error } = await supabase
         .storage
         .from(bucket)
-        .move(id, newName);
+        .move(oldName, newName);
   
       if (error) throw error;
       
@@ -351,8 +355,8 @@ const MediaManager = () => {
         <input 
           type="text" 
           defaultValue={item.name}
-          onBlur={(e) => handleUpdate(item.id, e.target.value, item.bucket)}
-          className="border rounded px-2 py-1"
+          onBlur={(e) => handleUpdate(item.id, e.target.value, item.bucket)} // Assuming handleUpdate uses item.id as oldName identifier, adjust if needed
+          className="border rounded px-2 py-1 w-full"
         />
       </TableCell>
       <TableCell>{item.type}</TableCell>
@@ -411,7 +415,14 @@ const MediaManager = () => {
                     <Video className="h-10 w-10" />}
                 </TableCell>
                 <TableCell>{item.bucket}</TableCell>
-                <TableCell>{item.name}</TableCell>
+                <TableCell>
+                  <input 
+                    type="text" 
+                    defaultValue={item.name}
+                    onBlur={(e) => handleUpdate(item.name, e.target.value, item.bucket)}
+                    className="border rounded px-2 py-1 w-full"
+                  />
+                </TableCell>
                 <TableCell>{item.type}</TableCell>
                 <TableCell>{(item.size / 1024).toFixed(2)} KB</TableCell>
                 <TableCell>{new Date(item.created_at).toLocaleDateString()}</TableCell>
