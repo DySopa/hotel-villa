@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Lock } from 'lucide-react';
@@ -31,9 +30,8 @@ const Navbar = () => {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
-  const navLinks = [
+  const menuItems = [
     { title: "Home", title_pt: "Início", path: "/" },
-    { title: "Rooms", title_pt: "Quartos", path: "/rooms" },
     { title: "Services", title_pt: "Serviços", path: "/services" },
     { title: "Gallery", title_pt: "Galeria", path: "/gallery" },
     { title: "Contact", title_pt: "Contato", path: "/contact" },
@@ -53,7 +51,7 @@ const Navbar = () => {
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
-          {navLinks.map((link) => (
+          {menuItems.map((link) => (
             <Link 
               key={link.path} 
               to={link.path}
@@ -112,7 +110,7 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white text-hotel-text py-4 shadow-md">
           <nav className="container mx-auto px-4 flex flex-col space-y-4">
-            {navLinks.map((link) => (
+            {menuItems.map((link) => (
               <Link 
                 key={link.path} 
                 to={link.path}

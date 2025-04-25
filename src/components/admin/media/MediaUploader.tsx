@@ -1,13 +1,13 @@
-
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Image, Film, X, Upload, Trash2 } from 'lucide-react';
+import { Image, Film, Upload, Trash2 } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useSupabase';
 import { useToast } from '@/components/ui/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface MediaUploaderProps {
-  bucketName: 'room_media' | 'service_media' | 'gallery_media';
+  bucketName: 'service_media' | 'gallery_media';
   folder: string;
   mediaList: string[];
   videoList: string[];
@@ -31,6 +31,7 @@ export const MediaUploader = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   
+  const [activeTab, setActiveTab] = useState<'details' | 'media'>('media');
   const [uploadType, setUploadType] = useState<'image' | 'video' | 'url'>('image');
   const [imageUrl, setImageUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
@@ -173,35 +174,40 @@ export const MediaUploader = ({
   
   return (
     <div className="space-y-4">
-      <div className="flex space-x-2">
-        <Button 
-          type="button" 
-          variant={uploadType === 'image' ? 'default' : 'outline'} 
-          onClick={() => setUploadType('image')}
-        >
-          <Image size={16} className="mr-2" />
-          {t("Upload Images", "Enviar Imagens")}
-        </Button>
-        <Button 
-          type="button" 
-          variant={uploadType === 'video' ? 'default' : 'outline'} 
-          onClick={() => setUploadType('video')}
-        >
-          <Film size={16} className="mr-2" />
-          {t("Upload Videos", "Enviar Vídeos")}
-        </Button>
-        <Button 
-          type="button" 
-          variant={uploadType === 'url' ? 'default' : 'outline'} 
-          onClick={() => setUploadType('url')}
-        >
-          <Upload size={16} className="mr-2" />
-          {t("Add URL", "Adicionar URL")}
-        </Button>
-      </div>
-      
-      {uploadType === 'image' && (
-        <div>
+      <Tabs value={activeTab} onValueChange={setActiveTab as any} className="w-full">
+        <TabsList className="w-full grid grid-cols-2">
+          <TabsTrigger value="details">{t("Details", "Detalhes")}</TabsTrigger>
+          <TabsTrigger value="media">{t("Media", "Mídia")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="media" className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="secondary"
+              className="bg-[#CD9B6A] text-white hover:bg-[#B88A5F]"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Image className="w-4 h-4 mr-2" />
+              {t("Send Images", "Enviar Imagens")}
+            </Button>
+
+            <Button 
+              variant="outline"
+              onClick={() => videoInputRef.current?.click()}
+            >
+              <Film className="w-4 h-4 mr-2" />
+              {t("Send Videos", "Enviar Vídeos")}
+            </Button>
+
+            <Button 
+              variant="outline"
+              onClick={() => setUploadType('url')}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {t("Add URL", "Adicionar URL")}
+            </Button>
+          </div>
+
           <input 
             type="file"
             ref={fileInputRef}
@@ -210,26 +216,7 @@ export const MediaUploader = ({
             onChange={e => handleFileSelect(e, 'image')}
             className="hidden"
           />
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading || mediaList.length >= maxFiles}
-          >
-            <Image size={16} className="mr-2" />
-            {isUploading ? t("Uploading...", "Enviando...") : t("Select Images", "Selecionar Imagens")}
-          </Button>
-          <p className="text-xs text-gray-500 mt-1">
-            {t(
-              `${mediaList.length}/${maxFiles} images uploaded. Max size: 10MB per image.`,
-              `${mediaList.length}/${maxFiles} imagens enviadas. Tamanho máximo: 10MB por imagem.`
-            )}
-          </p>
-        </div>
-      )}
-      
-      {uploadType === 'video' && (
-        <div>
+
           <input 
             type="file"
             ref={videoInputRef}
@@ -238,123 +225,103 @@ export const MediaUploader = ({
             onChange={e => handleFileSelect(e, 'video')}
             className="hidden"
           />
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => videoInputRef.current?.click()}
-            disabled={isUploading || videoList.length >= maxFiles}
-          >
-            <Film size={16} className="mr-2" />
-            {isUploading ? t("Uploading...", "Enviando...") : t("Select Videos", "Selecionar Vídeos")}
-          </Button>
-          <p className="text-xs text-gray-500 mt-1">
+
+          <p className="text-sm text-gray-500">
             {t(
-              `${videoList.length}/${maxFiles} videos uploaded. Max size: 100MB per video.`,
-              `${videoList.length}/${maxFiles} vídeos enviados. Tamanho máximo: 100MB por vídeo.`
+              `${mediaList.length}/${maxFiles} images uploaded. Maximum size: 10MB per image.`,
+              `${mediaList.length}/${maxFiles} imagens enviadas. Tamanho máximo: 10MB por imagem.`
             )}
           </p>
-        </div>
-      )}
-      
-      {uploadType === 'url' && (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="image-url" className="text-sm font-medium">
-              {t("Image URL", "URL da Imagem")}
-            </label>
-            <div className="flex space-x-2">
-              <input 
-                id="image-url"
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                className="flex-1 border border-gray-300 rounded-md px-3 py-2"
-              />
-              <Button 
-                type="button" 
-                onClick={() => handleUrlAdd('image')}
-                disabled={mediaList.length >= maxFiles}
-              >
-                {t("Add", "Adicionar")}
-              </Button>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="video-url" className="text-sm font-medium">
-              {t("Video URL", "URL do Vídeo")}
-            </label>
-            <div className="flex space-x-2">
-              <input 
-                id="video-url"
-                type="url"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="https://example.com/video.mp4"
-                className="flex-1 border border-gray-300 rounded-md px-3 py-2"
-              />
-              <Button 
-                type="button" 
-                onClick={() => handleUrlAdd('video')}
-                disabled={videoList.length >= maxFiles}
-              >
-                {t("Add", "Adicionar")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Image preview gallery */}
-      {mediaList.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-medium text-sm">{t("Uploaded Images", "Imagens Enviadas")}</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-            {mediaList.map((url, index) => (
-              <div key={`img-${index}`} className="relative group aspect-square">
-                <img 
-                  src={url} 
-                  alt={`Media ${index}`} 
-                  className="w-full h-full object-cover rounded-md"
+
+          {uploadType === 'url' && (
+            <div className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <input 
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder={t("Image URL", "URL da Imagem")}
+                  className="w-full px-3 py-2 border rounded-md"
                 />
-                <button
-                  type="button"
-                  onClick={() => handleDelete(url, 'image')}
-                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                <Button 
+                  onClick={() => handleUrlAdd('image')}
+                  disabled={mediaList.length >= maxFiles}
+                  className="w-full"
                 >
-                  <Trash2 size={16} />
-                </button>
+                  {t("Add Image", "Adicionar Imagem")}
+                </Button>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Video preview gallery */}
-      {videoList.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-medium text-sm">{t("Uploaded Videos", "Vídeos Enviados")}</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {videoList.map((url, index) => (
-              <div key={`vid-${index}`} className="relative group">
-                <video 
-                  src={url} 
-                  controls
-                  className="w-full h-auto rounded-md"
+              
+              <div className="space-y-2">
+                <input 
+                  type="url"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder={t("Video URL", "URL do Vídeo")}
+                  className="w-full px-3 py-2 border rounded-md"
                 />
-                <button
-                  type="button"
-                  onClick={() => handleDelete(url, 'video')}
-                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                <Button 
+                  onClick={() => handleUrlAdd('video')}
+                  disabled={videoList.length >= maxFiles}
+                  className="w-full"
                 >
-                  <Trash2 size={16} />
-                </button>
+                  {t("Add Video", "Adicionar Vídeo")}
+                </Button>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+          )}
+
+          {/* Image preview gallery */}
+          {mediaList.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="font-medium text-sm">{t("Uploaded Images", "Imagens Enviadas")}</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                {mediaList.map((url, index) => (
+                  <div key={`img-${index}`} className="relative group aspect-square">
+                    <img 
+                      src={url} 
+                      alt={`Media ${index + 1}`}
+                      className="w-full h-full object-cover rounded-md"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(url, 'image')}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Video preview gallery */}
+          {videoList.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="font-medium text-sm">{t("Uploaded Videos", "Vídeos Enviados")}</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {videoList.map((url, index) => (
+                  <div key={`vid-${index}`} className="relative group">
+                    <video 
+                      src={url} 
+                      controls
+                      className="w-full h-auto rounded-md"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(url, 'video')}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
